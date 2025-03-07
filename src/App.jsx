@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Footer from './component/Footer';
 import Header from './component/Header';
 import Boton from './component/Boton';
@@ -11,38 +11,82 @@ import ResponsiveAppBar from './component/AppBar';
 import CredentialsSignInPae from './component/Login';
 import Login from './component/Login';
 import Greeting from './component/Greeting';
+import Logout from './component/logout';
 
 function App() {
-  const [items,setItems] =useState([{id:1, name:'item1',price:1},{id:2, name:'item2',price:2},{id:3, name:'item3',price:3}]);
-  const [count, setCount] =useState(0);
+  console.log('App component is running');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const [isLogin, setIsLogin] = useState(false);
-  const sum=() =>{
-    setCount(count+1);
-    console.log(count)
-  }
-  const resta=() =>{
-    setCount(count-1);
-    console.log(count)
-  }
-  const add = (item) => {
-    item.id = items.length + 1;
-    setItems([...items, item]);
-  };
-  const del = (id) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
+  const [items, setItems] = useState([]);
 
-  const login=(user)=>{
-    if (user.username==="Ray" && user.password==="123"){
-      setIsLogin(true);
+  useEffect(()=> {
+    console.log("Autentificación ha cambiado, estado actual: ", isAuthenticated);
+    if(isAuthenticated){
+      console.log("Usuario autentificado");
     }
-    return isLogin;
+  },[isAuthenticated]);
+
+  const getItems = async () => {
+    try {
+      const startTime = Date.now();
+      const result = await fetch("http://localhost:5000/items/", { method: "GET" });
+      const data = await result.json();
+      const endTime = Date.now();
+      console.log("Tiempo de respuesta del GET:", endTime - startTime, "ms");
+      setItems(data.recordset);
+    } catch (error) {
+      console.error("Error al obtener items:", error);
+    }
   };
 
-  const setLogout = () => {
-    setIsLogin(false);
-  }; 
+  let [count, setCount] = useState(0);
+  const increment = () => setCount(count + 1);
+  const decrement = () => setCount(count - 1);
+
+  const add = async (item) => {
+    const result = await fetch("http://localhost:5000/items/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(item)
+    });
+    const newItem = await result.json();
+    console.log(newItem);
+    if (result.ok) {
+      setItems([...items, newItem]);
+    } else {
+      console.error('Error adding item:', newItem);
+    }
+  };
+  
+  
+
+  const del = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/items/${id}`, { method: "DELETE" });
+      if (response.ok) {
+        setItems(items.filter((item) => item.item_id !== id)); 
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+  
+
+  const login = async (user) => {
+    const result = await fetch("http://localhost:5000/login/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user)
+    });
+    const data = await result.json();
+    console.log(data);
+    setIsAuthenticated(data.isLogin);
+    console.log(data.isLogin) 
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+  };
 
   return (
     <div className="App">
@@ -51,11 +95,9 @@ function App() {
           <Routes>  
             <Route path= "/" element={ <Login login={login}/>}/>
             <Route path="/add" element={<Add add={add} />} />
-            <Route
-            path="/items"
-            element={<List items={items} ondelete={del} />}
-          />
-          <Route path="/greeting" element={<Greeting/>} />
+            <Route path="/items" element={<List items={items} ondelete={del} />}/>
+            <Route path="/login" element={!isAuthenticated ? <Login login={login} /> : <Greeting />} />
+
 
         </Routes>
       {/* {count}
