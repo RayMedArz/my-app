@@ -11,7 +11,7 @@ import ResponsiveAppBar from './component/AppBar';
 import CredentialsSignInPae from './component/Login';
 import Login from './component/Login';
 import Greeting from './component/Greeting';
-import Logout from './component/logout';
+import Logout from './component/Logout';
 
 function App() {
   console.log('App component is running');
@@ -29,7 +29,7 @@ function App() {
   const getItems = async () => {
     try {
       const startTime = Date.now();
-      const result = await fetch("http://localhost:5000/items/", { method: "GET" });
+      const result = await fetch("http://localhost:50000/items3/", { method: "GET" });
       const data = await result.json();
       const endTime = Date.now();
       console.log("Tiempo de respuesta del GET:", endTime - startTime, "ms");
@@ -44,7 +44,7 @@ function App() {
   const decrement = () => setCount(count - 1);
 
   const add = async (item) => {
-    const result = await fetch("http://localhost:5000/items/", {
+    const result = await fetch("http://localhost:50000/items3/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(item)
@@ -73,25 +73,42 @@ function App() {
   
 
   const login = async (user) => {
-    const result = await fetch("http://localhost:5000/login/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user)
-    });
-    const data = await result.json();
-    console.log(data);
-    setIsAuthenticated(data.isLogin);
-    console.log(data.isLogin) 
+    try {
+      const result = await fetch("http://localhost:50000/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user),
+      });
+      const data = await result.json();
+      console.log(data);
+  
+      if (data.isLogin) {
+        setIsAuthenticated(true);
+        console.log("Login exitoso");
+  
+        // Guardar el token en localStorage
+        localStorage.setItem("authToken", data.token);
+  
+        // Redirigir a la página /add
+        Navigate("/add");
+      } else {
+        alert("El login falló");
+      }
+    } catch (error) {
+      console.error("Error durante el login:", error);
+      alert("Ocurrió un error durante el login");
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem("authToken"); // Eliminar el token
   };
 
   return (
     <div className="App">
       <BrowserRouter>
-        {isLogin && <ResponsiveAppBar setLogout={setLogout}/>}
+        {isAuthenticated && <ResponsiveAppBar setLogout={logout}/>}
           <Routes>  
             <Route path= "/" element={ <Login login={login}/>}/>
             <Route path="/add" element={<Add add={add} />} />

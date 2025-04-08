@@ -4,22 +4,22 @@ import { useNavigate } from "react-router-dom";
 
 const Login = ({login}) => {
     const navigate = useNavigate();
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const onsubmit = (e) => { e.preventDefault();
-        if (!username || !password) {
+        if (!email || !password) {
             alert("los campos no deben estar vacios");
             return;
         }
-        const isLogin = login({ username, password });
+        const isLogin = login({ email, password });
         if (isLogin) {
-            setUsername("");
+            setEmail("");
             setPassword("");
             alert("El login fue exitoso");
         }else{
             alert("El login fallo");
         };
-        setUsername("");
+        setEmail("");
         setPassword("");
     }
   return (
@@ -31,7 +31,7 @@ const Login = ({login}) => {
         width={400}
         marginTop={"20px"}
       >
-        <TextField label={"Username"} value={username} onChange={(e)=> setUsername(e.target.value)}/>
+        <TextField label={"email"} value={email} onChange={(e)=> setEmail(e.target.value)}/>
         <TextField type={"password"} label={"Password"} value={password} onChange={(e)=>setPassword(e.target.value)} />
         <Button type={"submit"} variant="contained">
           Login
